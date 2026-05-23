@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Barang, getStatus, getRekomendasi, KATEGORI_LABEL, formatRupiah, hitungMarginPersen } from "@/lib/store";
+import { Barang, getStatus, getRekomendasi, KATEGORI_LABEL, formatRupiah, hitungMarginPersen, SATUAN_OPTIONS } from "@/lib/store";
 
 interface StokPageProps {
   stokBarang: Barang[];
@@ -133,7 +133,7 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
             <div className="space-y-3">
               <div><label className="text-sm text-gray-600 block mb-1">Nama</label><input type="text" value={addNama} onChange={(e) => setAddNama(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400" placeholder="Nama barang" /></div>
               <div><label className="text-sm text-gray-600 block mb-1">Kategori</label><select value={addKategori} onChange={(e) => setAddKategori(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400"><option value="rokok">Rokok</option><option value="kopi">Kopi</option><option value="snack">Snack</option><option value="sembako">Sembako</option></select></div>
-              <div><label className="text-sm text-gray-600 block mb-1">Satuan</label><input type="text" value={addSatuan} onChange={(e) => setAddSatuan(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400" placeholder="slop, renceng, pcs" /></div>
+              <div><label className="text-sm text-gray-600 block mb-1">Satuan</label><select value={addSatuan || "pcs"} onChange={(e) => setAddSatuan(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400">{SATUAN_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
               <div className="grid grid-cols-3 gap-3">
                 <div><label className="text-xs text-gray-600 block mb-1">Stok</label><input type="number" value={addStok} onChange={(e) => setAddStok(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" placeholder="0" /></div>
                 <div><label className="text-xs text-gray-600 block mb-1">Normal</label><input type="number" value={addStokNormal} onChange={(e) => setAddStokNormal(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" placeholder="10" /></div>

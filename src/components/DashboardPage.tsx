@@ -150,7 +150,7 @@ export default function DashboardPage({ omzetHariIni, stokBarang, onSimpanOmzet 
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm font-medium text-gray-800">{r.barang.nama}</p>
-                        <p className="text-xs text-gray-500">Beli {r.qtyBeli} {r.barang.satuan} @ {formatRupiah(r.barang.hargaModal)}</p>
+                        <p className="text-xs text-gray-500">Beli {r.qtyBeliFormatted} @ {formatRupiah(r.barang.hargaModal)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-navy-900">{formatRupiah(r.estimasiBiaya)}</p>
