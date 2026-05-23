@@ -14,6 +14,7 @@ import {
   Barang, OmzetHarian, ModalData, RiwayatHarian, GasData, PulsaData,
   DEFAULT_STOK, DEFAULT_GAS, DEFAULT_PULSA,
   getData, setData, getToday, getTanggalIndo, hitungPembagian,
+  fetchProducts, insertProduct, updateProduct, deleteProduct,
 } from "@/lib/store";
 
 export default function Home() {
@@ -28,49 +29,68 @@ export default function Home() {
   const [pulsaData, setPulsaData] = useState<PulsaData>(DEFAULT_PULSA);
 
   useEffect(() => {
-    const storedStok = getData<Barang[]>("stok_v2", DEFAULT_STOK);
-    const storedOmzet = getData<OmzetHarian>("omzet_today", { tanggal: getToday(), jumlah: 0 });
-    const storedHistory = getData<OmzetHarian[]>("omzet_history", []);
-    const storedModal = getData<ModalData>("modal_v2", { awal: 10000000, target: 20000000, berjalan: 10000000, history: [] });
-    const storedRiwayat = getData<RiwayatHarian[]>("riwayat_harian", []);
-    const storedGas = getData<GasData>("gas_data", DEFAULT_GAS);
-    const storedPulsa = getData<PulsaData>("pulsa_data", DEFAULT_PULSA);
-
-    if (storedOmzet.tanggal !== getToday()) {
-      if (storedOmzet.jumlah > 0) {
-        // Save yesterday to riwayat harian
-        const pembagian = hitungPembagian(storedOmzet.jumlah);
-        const newRiwayat: RiwayatHarian = {
-          tanggal: storedOmzet.tanggal,
-          omzet: storedOmzet.jumlah,
-          profit: Math.round(storedOmzet.jumlah * 0.15), // simplified
-          pengeluaran: pembagian.restock,
-          barangDibeli: [],
-        };
-        const updatedRiwayat = [...storedRiwayat, newRiwayat].slice(-30);
-        setRiwayatHarian(updatedRiwayat);
-        setData("riwayat_harian", updatedRiwayat);
-
-        const newHistory = [...storedHistory, storedOmzet].slice(-30);
-        setOmzetHistory(newHistory);
-        setData("omzet_history", newHistory);
-      } else {
-        setRiwayatHarian(storedRiwayat);
-        setOmzetHistory(storedHistory);
+    async function loadData() {
+      // Try Supabase first for products, fallback to localStorage
+      let loadedStok: Barang[] | null = null;
+      try {
+        loadedStok = await fetchProducts();
+      } catch (e) {
+        console.error("Failed to fetch from Supabase:", e);
       }
-      const freshOmzet = { tanggal: getToday(), jumlah: 0 };
-      setOmzetHariIni(freshOmzet);
-      setData("omzet_today", freshOmzet);
-    } else {
-      setOmzetHariIni(storedOmzet);
-      setOmzetHistory(storedHistory);
-      setRiwayatHarian(storedRiwayat);
+
+      if (loadedStok && loadedStok.length > 0) {
+        setStokBarang(loadedStok);
+        setData("stok_v2", loadedStok); // sync to localStorage as cache
+      } else {
+        // Fallback to localStorage
+        const storedStok = getData<Barang[]>("stok_v2", DEFAULT_STOK);
+        setStokBarang(storedStok);
+      }
+
+      // Other data stays in localStorage for now
+      const storedOmzet = getData<OmzetHarian>("omzet_today", { tanggal: getToday(), jumlah: 0 });
+      const storedHistory = getData<OmzetHarian[]>("omzet_history", []);
+      const storedModal = getData<ModalData>("modal_v2", { awal: 10000000, target: 20000000, berjalan: 10000000, history: [] });
+      const storedRiwayat = getData<RiwayatHarian[]>("riwayat_harian", []);
+      const storedGas = getData<GasData>("gas_data", DEFAULT_GAS);
+      const storedPulsa = getData<PulsaData>("pulsa_data", DEFAULT_PULSA);
+
+      if (storedOmzet.tanggal !== getToday()) {
+        if (storedOmzet.jumlah > 0) {
+          const pembagian = hitungPembagian(storedOmzet.jumlah);
+          const newRiwayat: RiwayatHarian = {
+            tanggal: storedOmzet.tanggal,
+            omzet: storedOmzet.jumlah,
+            profit: Math.round(storedOmzet.jumlah * 0.15),
+            pengeluaran: pembagian.restock,
+            barangDibeli: [],
+          };
+          const updatedRiwayat = [...storedRiwayat, newRiwayat].slice(-30);
+          setRiwayatHarian(updatedRiwayat);
+          setData("riwayat_harian", updatedRiwayat);
+
+          const newHistory = [...storedHistory, storedOmzet].slice(-30);
+          setOmzetHistory(newHistory);
+          setData("omzet_history", newHistory);
+        } else {
+          setRiwayatHarian(storedRiwayat);
+          setOmzetHistory(storedHistory);
+        }
+        const freshOmzet = { tanggal: getToday(), jumlah: 0 };
+        setOmzetHariIni(freshOmzet);
+        setData("omzet_today", freshOmzet);
+      } else {
+        setOmzetHariIni(storedOmzet);
+        setOmzetHistory(storedHistory);
+        setRiwayatHarian(storedRiwayat);
+      }
+
+      setModalData(storedModal);
+      setGasData(storedGas);
+      setPulsaData(storedPulsa);
+      setMounted(true);
     }
-    setStokBarang(storedStok);
-    setModalData(storedModal);
-    setGasData(storedGas);
-    setPulsaData(storedPulsa);
-    setMounted(true);
+    loadData();
   }, []);
 
   // Handlers
@@ -105,29 +125,43 @@ export default function Home() {
   };
 
 
-  const handleUpdateStok = (id: number, stok: number) => {
+  const handleUpdateStok = async (id: number, stok: number) => {
+    const barang = stokBarang.find((b) => b.id === id);
+    if (!barang) return;
     const updated = stokBarang.map((b) => (b.id === id ? { ...b, stok } : b));
     setStokBarang(updated);
     setData("stok_v2", updated);
+    await updateProduct({ ...barang, stok });
   };
 
-  const handleHapusBarang = (id: number) => {
+  const handleHapusBarang = async (id: number) => {
     const updated = stokBarang.filter((b) => b.id !== id);
     setStokBarang(updated);
     setData("stok_v2", updated);
+    await deleteProduct(id);
   };
 
-  const handleTambahBarang = (barang: Omit<Barang, "id">) => {
-    const newId = stokBarang.length > 0 ? Math.max(...stokBarang.map((b) => b.id)) + 1 : 1;
-    const updated = [...stokBarang, { ...barang, id: newId }];
-    setStokBarang(updated);
-    setData("stok_v2", updated);
+  const handleTambahBarang = async (barang: Omit<Barang, "id">) => {
+    // Try Supabase first
+    const inserted = await insertProduct(barang);
+    if (inserted) {
+      const updated = [...stokBarang, inserted];
+      setStokBarang(updated);
+      setData("stok_v2", updated);
+    } else {
+      // Fallback: local id
+      const newId = stokBarang.length > 0 ? Math.max(...stokBarang.map((b) => b.id)) + 1 : 1;
+      const updated = [...stokBarang, { ...barang, id: newId }];
+      setStokBarang(updated);
+      setData("stok_v2", updated);
+    }
   };
 
-  const handleUpdateBarang = (barang: Barang) => {
+  const handleUpdateBarang = async (barang: Barang) => {
     const updated = stokBarang.map((b) => (b.id === barang.id ? barang : b));
     setStokBarang(updated);
     setData("stok_v2", updated);
+    await updateProduct(barang);
   };
 
   const handleTambahModal = (jumlah: number, sumber: string) => {

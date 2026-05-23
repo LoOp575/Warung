@@ -169,3 +169,112 @@ export function getRekomendasiBelanja(stokBarang: Barang[]): RekomendasiBelanja[
 }
 
 export const KATEGORI_LABEL: Record<string, string> = { rokok: "Rokok", kopi: "Kopi", snack: "Snack", sembako: "Sembako", gas: "Gas LPG", pulsa: "Pulsa/PPOB" };
+
+
+// === SUPABASE CRUD (products table) ===
+import { supabase, isSupabaseEnabled } from "./supabase";
+
+// Map Supabase row → Barang
+interface ProductRow {
+  id: number;
+  name: string;
+  category: string;
+  unit: string;
+  stock: number;
+  target_stock: number;
+  restock_limit: number;
+  buy_price: number;
+  sell_price: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+function rowToBarang(row: ProductRow): Barang {
+  return {
+    id: row.id,
+    nama: row.name,
+    kategori: row.category,
+    satuan: row.unit,
+    stok: row.stock,
+    stokNormal: row.target_stock,
+    minimum: row.restock_limit,
+    hargaModal: row.buy_price,
+    hargaJual: row.sell_price,
+  };
+}
+
+function barangToRow(b: Omit<Barang, "id">): Omit<ProductRow, "id" | "created_at" | "updated_at"> {
+  return {
+    name: b.nama,
+    category: b.kategori,
+    unit: b.satuan,
+    stock: b.stok,
+    target_stock: b.stokNormal,
+    restock_limit: b.minimum,
+    buy_price: b.hargaModal,
+    sell_price: b.hargaJual,
+  };
+}
+
+// Fetch all products
+export async function fetchProducts(): Promise<Barang[] | null> {
+  if (!isSupabaseEnabled() || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("id", { ascending: true });
+    if (error) { console.error("Supabase fetch error:", error); return null; }
+    return (data as ProductRow[]).map(rowToBarang);
+  } catch (e) { console.error("Supabase fetch exception:", e); return null; }
+}
+
+// Insert product
+export async function insertProduct(barang: Omit<Barang, "id">): Promise<Barang | null> {
+  if (!isSupabaseEnabled() || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .insert(barangToRow(barang))
+      .select()
+      .single();
+    if (error) { console.error("Supabase insert error:", error); return null; }
+    return rowToBarang(data as ProductRow);
+  } catch (e) { console.error("Supabase insert exception:", e); return null; }
+}
+
+// Update product
+export async function updateProduct(barang: Barang): Promise<boolean> {
+  if (!isSupabaseEnabled() || !supabase) return false;
+  try {
+    const { error } = await supabase
+      .from("products")
+      .update({
+        name: barang.nama,
+        category: barang.kategori,
+        unit: barang.satuan,
+        stock: barang.stok,
+        target_stock: barang.stokNormal,
+        restock_limit: barang.minimum,
+        buy_price: barang.hargaModal,
+        sell_price: barang.hargaJual,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", barang.id);
+    if (error) { console.error("Supabase update error:", error); return false; }
+    return true;
+  } catch (e) { console.error("Supabase update exception:", e); return false; }
+}
+
+// Delete product
+export async function deleteProduct(id: number): Promise<boolean> {
+  if (!isSupabaseEnabled() || !supabase) return false;
+  try {
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+    if (error) { console.error("Supabase delete error:", error); return false; }
+    return true;
+  } catch (e) { console.error("Supabase delete exception:", e); return false; }
+}
