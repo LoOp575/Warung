@@ -7,9 +7,13 @@ import DashboardPage from "@/components/DashboardPage";
 import StokPage from "@/components/StokPage";
 import GrafikPage from "@/components/GrafikPage";
 import TargetPage from "@/components/TargetPage";
+import RiwayatPage from "@/components/RiwayatPage";
+import GasLpgPage from "@/components/GasLpgPage";
+import PulsaPage from "@/components/PulsaPage";
 import {
-  Barang, OmzetHarian, ModalData,
-  DEFAULT_STOK, getData, setData, getToday, getTanggalIndo,
+  Barang, OmzetHarian, ModalData, RiwayatHarian, GasData, PulsaData,
+  DEFAULT_STOK, DEFAULT_GAS, DEFAULT_PULSA,
+  getData, setData, getToday, getTanggalIndo, hitungPembagian,
 } from "@/lib/store";
 
 export default function Home() {
@@ -19,18 +23,40 @@ export default function Home() {
   const [omzetHariIni, setOmzetHariIni] = useState<OmzetHarian>({ tanggal: getToday(), jumlah: 0 });
   const [omzetHistory, setOmzetHistory] = useState<OmzetHarian[]>([]);
   const [modalData, setModalData] = useState<ModalData>({ awal: 10000000, target: 20000000, berjalan: 10000000, history: [] });
+  const [riwayatHarian, setRiwayatHarian] = useState<RiwayatHarian[]>([]);
+  const [gasData, setGasData] = useState<GasData>(DEFAULT_GAS);
+  const [pulsaData, setPulsaData] = useState<PulsaData>(DEFAULT_PULSA);
 
   useEffect(() => {
-    const storedStok = getData<Barang[]>("stok", DEFAULT_STOK);
+    const storedStok = getData<Barang[]>("stok_v2", DEFAULT_STOK);
     const storedOmzet = getData<OmzetHarian>("omzet_today", { tanggal: getToday(), jumlah: 0 });
     const storedHistory = getData<OmzetHarian[]>("omzet_history", []);
-    const storedModal = getData<ModalData>("modal", { awal: 10000000, target: 20000000, berjalan: 10000000, history: [] });
+    const storedModal = getData<ModalData>("modal_v2", { awal: 10000000, target: 20000000, berjalan: 10000000, history: [] });
+    const storedRiwayat = getData<RiwayatHarian[]>("riwayat_harian", []);
+    const storedGas = getData<GasData>("gas_data", DEFAULT_GAS);
+    const storedPulsa = getData<PulsaData>("pulsa_data", DEFAULT_PULSA);
 
     if (storedOmzet.tanggal !== getToday()) {
       if (storedOmzet.jumlah > 0) {
+        // Save yesterday to riwayat harian
+        const pembagian = hitungPembagian(storedOmzet.jumlah);
+        const newRiwayat: RiwayatHarian = {
+          tanggal: storedOmzet.tanggal,
+          omzet: storedOmzet.jumlah,
+          profit: Math.round(storedOmzet.jumlah * 0.15), // simplified
+          pengeluaran: pembagian.restock,
+          barangDibeli: [],
+        };
+        const updatedRiwayat = [...storedRiwayat, newRiwayat].slice(-30);
+        setRiwayatHarian(updatedRiwayat);
+        setData("riwayat_harian", updatedRiwayat);
+
         const newHistory = [...storedHistory, storedOmzet].slice(-30);
         setOmzetHistory(newHistory);
         setData("omzet_history", newHistory);
+      } else {
+        setRiwayatHarian(storedRiwayat);
+        setOmzetHistory(storedHistory);
       }
       const freshOmzet = { tanggal: getToday(), jumlah: 0 };
       setOmzetHariIni(freshOmzet);
@@ -38,12 +64,16 @@ export default function Home() {
     } else {
       setOmzetHariIni(storedOmzet);
       setOmzetHistory(storedHistory);
+      setRiwayatHarian(storedRiwayat);
     }
     setStokBarang(storedStok);
     setModalData(storedModal);
+    setGasData(storedGas);
+    setPulsaData(storedPulsa);
     setMounted(true);
   }, []);
 
+  // Handlers
   const handleSimpanOmzet = (jumlah: number) => {
     const newOmzet = { tanggal: getToday(), jumlah };
     setOmzetHariIni(newOmzet);
@@ -51,8 +81,20 @@ export default function Home() {
   };
 
   const handleResetHarian = () => {
-    if (!confirm("Reset data harian?")) return;
+    if (!confirm("Reset data harian? Omzet akan disimpan ke riwayat.")) return;
     if (omzetHariIni.jumlah > 0) {
+      const pembagian = hitungPembagian(omzetHariIni.jumlah);
+      const newRiwayat: RiwayatHarian = {
+        tanggal: omzetHariIni.tanggal,
+        omzet: omzetHariIni.jumlah,
+        profit: Math.round(omzetHariIni.jumlah * 0.15),
+        pengeluaran: pembagian.restock,
+        barangDibeli: [],
+      };
+      const updatedRiwayat = [...riwayatHarian, newRiwayat].slice(-30);
+      setRiwayatHarian(updatedRiwayat);
+      setData("riwayat_harian", updatedRiwayat);
+
       const newHistory = [...omzetHistory, omzetHariIni].slice(-30);
       setOmzetHistory(newHistory);
       setData("omzet_history", newHistory);
@@ -62,33 +104,50 @@ export default function Home() {
     setData("omzet_today", freshOmzet);
   };
 
+
   const handleUpdateStok = (id: number, stok: number) => {
     const updated = stokBarang.map((b) => (b.id === id ? { ...b, stok } : b));
     setStokBarang(updated);
-    setData("stok", updated);
+    setData("stok_v2", updated);
   };
 
   const handleHapusBarang = (id: number) => {
     const updated = stokBarang.filter((b) => b.id !== id);
     setStokBarang(updated);
-    setData("stok", updated);
+    setData("stok_v2", updated);
   };
 
   const handleTambahBarang = (barang: Omit<Barang, "id">) => {
     const newId = stokBarang.length > 0 ? Math.max(...stokBarang.map((b) => b.id)) + 1 : 1;
     const updated = [...stokBarang, { ...barang, id: newId }];
     setStokBarang(updated);
-    setData("stok", updated);
+    setData("stok_v2", updated);
   };
 
-  const handleTambahModal = (jumlah: number) => {
+  const handleUpdateBarang = (barang: Barang) => {
+    const updated = stokBarang.map((b) => (b.id === barang.id ? barang : b));
+    setStokBarang(updated);
+    setData("stok_v2", updated);
+  };
+
+  const handleTambahModal = (jumlah: number, sumber: string) => {
     const updated = {
       ...modalData,
       berjalan: modalData.berjalan + jumlah,
-      history: [...modalData.history, { tanggal: getTanggalIndo(), jumlah }],
+      history: [...modalData.history, { tanggal: getTanggalIndo(), jumlah, sumber }],
     };
     setModalData(updated);
-    setData("modal", updated);
+    setData("modal_v2", updated);
+  };
+
+  const handleUpdateGas = (data: GasData) => {
+    setGasData(data);
+    setData("gas_data", data);
+  };
+
+  const handleUpdatePulsa = (data: PulsaData) => {
+    setPulsaData(data);
+    setData("pulsa_data", data);
   };
 
   if (!mounted) {
@@ -118,9 +177,12 @@ export default function Home() {
           </div>
         </header>
         {activePage === "dashboard" && <DashboardPage omzetHariIni={omzetHariIni} stokBarang={stokBarang} onSimpanOmzet={handleSimpanOmzet} />}
-        {activePage === "stok" && <StokPage stokBarang={stokBarang} onUpdateStok={handleUpdateStok} onHapusBarang={handleHapusBarang} onTambahBarang={handleTambahBarang} />}
+        {activePage === "stok" && <StokPage stokBarang={stokBarang} onUpdateStok={handleUpdateStok} onHapusBarang={handleHapusBarang} onTambahBarang={handleTambahBarang} onUpdateBarang={handleUpdateBarang} />}
+        {activePage === "gas" && <GasLpgPage gasData={gasData} onUpdate={handleUpdateGas} />}
+        {activePage === "pulsa" && <PulsaPage pulsaData={pulsaData} onUpdate={handleUpdatePulsa} />}
+        {activePage === "riwayat" && <RiwayatPage riwayatHarian={riwayatHarian} omzetHariIni={omzetHariIni} />}
         {activePage === "grafik" && <GrafikPage omzetHariIni={omzetHariIni} omzetHistory={omzetHistory} />}
-        {activePage === "target" && <TargetPage modalData={modalData} onTambahModal={handleTambahModal} />}
+        {activePage === "target" && <TargetPage modalData={modalData} riwayatHarian={riwayatHarian} onTambahModal={handleTambahModal} />}
       </main>
       <MobileNav activePage={activePage} onNavigate={setActivePage} />
     </>

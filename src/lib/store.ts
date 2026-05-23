@@ -1,4 +1,4 @@
-// WarungOS - Data Store
+// WarungOS v2 - Data Store
 
 export interface Barang {
   id: number;
@@ -8,6 +8,8 @@ export interface Barang {
   stok: number;
   stokNormal: number;
   minimum: number;
+  hargaModal: number;
+  hargaJual: number;
 }
 
 export interface OmzetHarian {
@@ -15,32 +17,75 @@ export interface OmzetHarian {
   jumlah: number;
 }
 
+export interface RiwayatHarian {
+  tanggal: string;
+  omzet: number;
+  profit: number;
+  pengeluaran: number;
+  barangDibeli: { nama: string; qty: number; total: number }[];
+}
+
 export interface ModalData {
   awal: number;
   target: number;
   berjalan: number;
-  history: { tanggal: string; jumlah: number }[];
+  history: { tanggal: string; jumlah: number; sumber: string }[];
+}
+
+export interface GasData {
+  tabungIsi: number;
+  tabungKosong: number;
+  hargaBeli: number;
+  hargaJual: number;
+  riwayat: { tanggal: string; aksi: "isi" | "jual"; qty: number }[];
+}
+
+export interface PulsaData {
+  saldo: number;
+  saldoMax: number;
+  riwayat: { tanggal: string; aksi: "deposit" | "jual"; jumlah: number; keterangan: string }[];
+}
+
+export interface RekomendasiBelanja {
+  barang: Barang;
+  qtyBeli: number;
+  estimasiBiaya: number;
 }
 
 export const DEFAULT_STOK: Barang[] = [
-  { id: 1, nama: "Pandemas", kategori: "rokok", satuan: "slop", stok: 5, stokNormal: 10, minimum: 3 },
-  { id: 2, nama: "Tebu", kategori: "rokok", satuan: "slop", stok: 4, stokNormal: 10, minimum: 3 },
-  { id: 3, nama: "Armor", kategori: "rokok", satuan: "slop", stok: 6, stokNormal: 10, minimum: 3 },
-  { id: 4, nama: "76 Apel", kategori: "rokok", satuan: "slop", stok: 3, stokNormal: 8, minimum: 2 },
-  { id: 5, nama: "Kopi Sachet", kategori: "kopi", satuan: "renceng", stok: 6, stokNormal: 15, minimum: 4 },
-  { id: 6, nama: "Beng-beng", kategori: "snack", satuan: "pcs", stok: 20, stokNormal: 50, minimum: 15 },
-  { id: 7, nama: "Coklatos", kategori: "snack", satuan: "pcs", stok: 25, stokNormal: 50, minimum: 15 },
-  { id: 8, nama: "Snack Lain", kategori: "snack", satuan: "pcs", stok: 40, stokNormal: 60, minimum: 18 },
-  { id: 9, nama: "Terigu", kategori: "sembako", satuan: "karung", stok: 2, stokNormal: 5, minimum: 1 },
-  { id: 10, nama: "Minyak Goreng", kategori: "sembako", satuan: "liter", stok: 10, stokNormal: 20, minimum: 10 },
-  { id: 11, nama: "Gula", kategori: "sembako", satuan: "sak", stok: 2, stokNormal: 5, minimum: 1 },
-  { id: 12, nama: "Masako", kategori: "sembako", satuan: "renceng", stok: 8, stokNormal: 20, minimum: 5 },
-  { id: 13, nama: "Gas LPG 3kg", kategori: "gas", satuan: "tabung kosong", stok: 3, stokNormal: 10, minimum: 5 },
-  { id: 14, nama: "Deposit Pulsa", kategori: "pulsa", satuan: "% saldo", stok: 40, stokNormal: 100, minimum: 30 },
+  { id: 1, nama: "Pandemas", kategori: "rokok", satuan: "slop", stok: 5, stokNormal: 10, minimum: 3, hargaModal: 180000, hargaJual: 200000 },
+  { id: 2, nama: "Tebu", kategori: "rokok", satuan: "slop", stok: 4, stokNormal: 10, minimum: 3, hargaModal: 150000, hargaJual: 170000 },
+  { id: 3, nama: "Armor", kategori: "rokok", satuan: "slop", stok: 6, stokNormal: 10, minimum: 3, hargaModal: 130000, hargaJual: 150000 },
+  { id: 4, nama: "76 Apel", kategori: "rokok", satuan: "slop", stok: 3, stokNormal: 8, minimum: 2, hargaModal: 140000, hargaJual: 160000 },
+  { id: 5, nama: "Kopi Sachet", kategori: "kopi", satuan: "renceng", stok: 6, stokNormal: 15, minimum: 4, hargaModal: 12000, hargaJual: 15000 },
+  { id: 6, nama: "Beng-beng", kategori: "snack", satuan: "pcs", stok: 20, stokNormal: 50, minimum: 15, hargaModal: 2000, hargaJual: 3000 },
+  { id: 7, nama: "Coklatos", kategori: "snack", satuan: "pcs", stok: 25, stokNormal: 50, minimum: 15, hargaModal: 1500, hargaJual: 2500 },
+  { id: 8, nama: "Snack Lain", kategori: "snack", satuan: "pcs", stok: 40, stokNormal: 60, minimum: 18, hargaModal: 1000, hargaJual: 2000 },
+  { id: 9, nama: "Terigu", kategori: "sembako", satuan: "karung", stok: 2, stokNormal: 5, minimum: 1, hargaModal: 75000, hargaJual: 90000 },
+  { id: 10, nama: "Minyak Goreng", kategori: "sembako", satuan: "liter", stok: 10, stokNormal: 20, minimum: 10, hargaModal: 15000, hargaJual: 18000 },
+  { id: 11, nama: "Gula", kategori: "sembako", satuan: "sak", stok: 2, stokNormal: 5, minimum: 1, hargaModal: 65000, hargaJual: 78000 },
+  { id: 12, nama: "Masako", kategori: "sembako", satuan: "renceng", stok: 8, stokNormal: 20, minimum: 5, hargaModal: 10000, hargaJual: 13000 },
+  { id: 13, nama: "Gas LPG 3kg", kategori: "gas", satuan: "tabung", stok: 7, stokNormal: 10, minimum: 3, hargaModal: 18000, hargaJual: 23000 },
+  { id: 14, nama: "Deposit Pulsa", kategori: "pulsa", satuan: "% saldo", stok: 40, stokNormal: 100, minimum: 30, hargaModal: 0, hargaJual: 0 },
 ];
 
+export const DEFAULT_GAS: GasData = {
+  tabungIsi: 7,
+  tabungKosong: 3,
+  hargaBeli: 18000,
+  hargaJual: 23000,
+  riwayat: [],
+};
+
+export const DEFAULT_PULSA: PulsaData = {
+  saldo: 500000,
+  saldoMax: 1500000,
+  riwayat: [],
+};
+
+// === HELPERS ===
 export function formatRupiah(num: number): string {
-  if (num === null || num === undefined) return "Rp 0";
+  if (num === null || num === undefined || isNaN(num)) return "Rp 0";
   return "Rp " + Number(num).toLocaleString("id-ID");
 }
 
@@ -48,13 +93,20 @@ export function getToday(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-export function getTanggalIndo(): string {
+export function getTanggalIndo(date?: Date): string {
   const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-  const d = new Date();
+  const d = date || new Date();
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+export function formatTanggalShort(dateStr: string): string {
+  const d = new Date(dateStr);
+  const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+// === LOCAL STORAGE ===
 export function getData<T>(key: string, defaultVal: T): T {
   if (typeof window === "undefined") return defaultVal;
   try {
@@ -70,6 +122,7 @@ export function setData<T>(key: string, val: T): void {
   localStorage.setItem("warungos_" + key, JSON.stringify(val));
 }
 
+// === STATUS ===
 export interface StatusInfo {
   status: "AMAN" | "WASPADA" | "BELI";
   color: "green" | "orange" | "red";
@@ -89,7 +142,7 @@ export function getStatus(barang: Barang): StatusInfo {
 
 export function getRekomendasi(barang: Barang, statusInfo: StatusInfo): string {
   if (statusInfo.status === "BELI") {
-    if (barang.kategori === "gas") return `ISI! Sudah ${barang.stok} tabung kosong`;
+    if (barang.kategori === "gas") return `ISI! Stok tinggal ${barang.stok} tabung`;
     if (barang.kategori === "pulsa") return `ISI DEPOSIT! Saldo tinggal ${barang.stok}%`;
     return `BELI! Stok tinggal ${barang.stok} ${barang.satuan}`;
   }
@@ -99,6 +152,7 @@ export function getRekomendasi(barang: Barang, statusInfo: StatusInfo): string {
   return `Stok cukup (${barang.stok}/${barang.stokNormal} ${barang.satuan})`;
 }
 
+// === PROFIT ===
 export function hitungPembagian(omzet: number) {
   return {
     restock: Math.round(omzet * 0.7),
@@ -106,6 +160,34 @@ export function hitungPembagian(omzet: number) {
     growth: Math.round(omzet * 0.1),
     kas: Math.round(omzet * 0.05),
   };
+}
+
+export function hitungProfitBarang(barang: Barang): number {
+  return barang.hargaJual - barang.hargaModal;
+}
+
+export function hitungMarginPersen(barang: Barang): number {
+  if (barang.hargaModal === 0) return 0;
+  return Math.round(((barang.hargaJual - barang.hargaModal) / barang.hargaModal) * 100);
+}
+
+// === REKOMENDASI BELANJA ===
+export function getRekomendasiBelanja(stokBarang: Barang[]): RekomendasiBelanja[] {
+  const rekom: RekomendasiBelanja[] = [];
+  stokBarang.forEach((b) => {
+    if (b.kategori === "pulsa") return; // skip pulsa
+    const status = getStatus(b);
+    if (status.status === "BELI" || status.status === "WASPADA") {
+      const qtyBeli = b.stokNormal - b.stok;
+      const estimasiBiaya = qtyBeli * b.hargaModal;
+      rekom.push({ barang: b, qtyBeli, estimasiBiaya });
+    }
+  });
+  return rekom.sort((a, b) => {
+    const priorityA = getStatus(a.barang).status === "BELI" ? 0 : 1;
+    const priorityB = getStatus(b.barang).status === "BELI" ? 0 : 1;
+    return priorityA - priorityB;
+  });
 }
 
 export const KATEGORI_LABEL: Record<string, string> = {
