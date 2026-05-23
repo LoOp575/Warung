@@ -18,18 +18,29 @@
 | Orange | WASPADA  | Stok mulai menipis      |
 | Merah  | BELI/ISI | Segera restock/isi ulang |
 
-## Cara Pakai
+## Deploy di Vercel
 
-1. Buka file `warungos/index.html` di browser
-2. Input omzet harian di dashboard
-3. Kelola stok barang di halaman Stok
-4. Pantau grafik dan target modal
+1. Push repo ini ke GitHub
+2. Buka [vercel.com](https://vercel.com)
+3. Import repository dari GitHub
+4. Vercel otomatis detect Next.js, klik **Deploy**
+5. Selesai!
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Buka [http://localhost:3000](http://localhost:3000)
 
 ## Teknologi
 
-- HTML5
-- Tailwind CSS (via CDN)
-- Vanilla JavaScript
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
 - localStorage (data tersimpan di browser)
 
 ## Desain
@@ -40,16 +51,21 @@
 - Warna: biru muda pucat, cyan, putih, navy gelap
 - Card rounded dengan shadow halus
 
-## Struktur File
+## Struktur
 
 ```
-warungos/
-├── index.html    # Halaman utama (HTML + Tailwind)
-└── app.js        # Logic aplikasi (JavaScript)
+src/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── DashboardPage.tsx
+│   ├── GrafikPage.tsx
+│   ├── MobileNav.tsx
+│   ├── Sidebar.tsx
+│   ├── StokPage.tsx
+│   └── TargetPage.tsx
+└── lib/
+    └── store.ts
 ```
-
-## Catatan
-
-- Data disimpan di localStorage browser
-- Tidak memerlukan server/database
-- Cocok dibuka di HP Android via browser
