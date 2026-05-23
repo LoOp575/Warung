@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarungOS - Dashboard Management Warung</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            navy: {
+              800: '#1e3a5f',
+              900: '#0f2744',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .status-aman { background-color: #dcfce7; color: #166534; border-color: #86efac; }
+    .status-waspada { background-color: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .status-beli { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .nav-active { color: #0ea5e9; }
+    .card-hover { transition: all 0.2s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .progress-bar { transition: width 0.5s ease; }
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .page { display: none; }
+    .page.active { display: block; }
+    @media (min-width: 1024px) {
+      .mobile-nav { display: none; }
+      .sidebar { display: flex; }
+    }
+    @media (max-width: 1023px) {
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-primary-50 via-white to-primary-100 min-h-screen">
+
+  <!-- Sidebar Desktop -->
+  <aside class="sidebar fixed left-0 top-0 h-full w-64 bg-navy-900 text-white flex-col z-50 shadow-xl">
+    <div class="p-6 border-b border-navy-800">
+      <h1 class="text-2xl font-bold text-primary-300">WarungOS</h1>
+      <p class="text-xs text-gray-400 mt-1">Management Warung Pintar</p>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <button onclick="showPage('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-navy-800 transition-colors text-left" data-page="dashboard">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </button>
+      <button onclick="showPage('stok')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-navy-800 transition-colors text-left" data-page="stok">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Stok Barang
+      </button>
+      <button onclick="showPage('grafik')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-navy-800 transition-colors text-left" data-page="grafik">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Grafik
+      </button>
+      <button onclick="showPage('target')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-navy-800 transition-colors text-left" data-page="target">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        Target Modal
+      </button>
+    </nav>
+    <div class="p-4 border-t border-navy-800">
+      <p class="text-xs text-gray-500 text-center">v1.0.0 &copy; 2024</p>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="lg:ml-64 pb-24 lg:pb-8">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-100 px-4 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-navy-900 lg:hidden">WarungOS</h2>
+          <p class="text-sm text-gray-500" id="headerDate"></p>
+        </div>
+        <button onclick="resetHarian()" class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+          Reset Harian
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashboard Page -->
+    <div id="page-dashboard" class="page active p-4 lg:p-8">
+      <!-- Omzet Input -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 card-hover">
+        <h3 class="text-lg font-semibold text-navy-900 mb-4">Input Omzet Hari Ini</h3>
+        <div class="flex gap-3">
+          <div class="flex-1 relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">Rp</span>
+            <input type="number" id="omzetInput" placeholder="500000" 
+              class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none text-lg"
+              onkeypress="if(event.key==='Enter')simpanOmzet()">
+          </div>
+          <button onclick="simpanOmzet()" class="bg-primary-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-600 transition-colors shadow-sm">
+            Simpan
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <p class="text-xs text-gray-500 mb-1">Omzet Hari Ini</p>
+          <p class="text-lg lg:text-xl font-bold text-navy-900" id="summaryOmzet">Rp 0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <p class="text-xs text-gray-500 mb-1">Restock (70%)</p>
+          <p class="text-lg lg:text-xl font-bold text-primary-600" id="summaryRestock">Rp 0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <p class="text-xs text-gray-500 mb-1">Tabungan (15%)</p>
+          <p class="text-lg lg:text-xl font-bold text-green-600" id="summaryTabungan">Rp 0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <p class="text-xs text-gray-500 mb-1">Growth (10%)</p>
+          <p class="text-lg lg:text-xl font-bold text-purple-600" id="summaryGrowth">Rp 0</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <p class="text-xs text-gray-500 mb-1">Kas Kecil (5%)</p>
+          <p class="text-xl font-bold text-orange-600" id="summaryKas">Rp 0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            <p class="text-xs text-gray-500">Harus Beli</p>
+          </div>
+          <p class="text-xl font-bold text-red-600" id="summaryBeli">0 barang</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+            <p class="text-xs text-gray-500">Stok Aman</p>
+          </div>
+          <p class="text-xl font-bold text-green-600" id="summaryAman">0 barang</p>
+        </div>
+      </div>
+
+      <!-- Alert Restock -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 card-hover">
+        <h3 class="text-lg font-semibold text-navy-900 mb-4">Alarm Restock</h3>
+        <div id="alertList" class="space-y-3">
+          <p class="text-gray-400 text-sm">Belum ada alert</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stok Page -->
+    <div id="page-stok" class="page p-4 lg:p-8">
+      <!-- Filter & Add -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        <select id="filterKategori" onchange="renderStok()" class="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary-400 outline-none">
+          <option value="semua">Semua Kategori</option>
+          <option value="rokok">Rokok</option>
+          <option value="kopi">Kopi</option>
+          <option value="snack">Snack</option>
+          <option value="sembako">Sembako</option>
+          <option value="gas">Gas LPG</option>
+          <option value="pulsa">Pulsa/PPOB</option>
+        </select>
+        <button onclick="showTambahBarang()" class="bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary-600 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Tambah Barang
+        </button>
+      </div>
+
+      <!-- Stok Cards Grid -->
+      <div id="stokGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      </div>
+    </div>
+
+    <!-- Grafik Page -->
+    <div id="page-grafik" class="page p-4 lg:p-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-navy-900 mb-4">Omzet 7 Hari Terakhir</h3>
+        <div class="h-64 flex items-end gap-2" id="chartContainer">
+        </div>
+        <div class="flex justify-between mt-2 text-xs text-gray-400" id="chartLabels">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 card-hover">
+          <p class="text-sm text-gray-500 mb-1">Total Omzet Mingguan</p>
+          <p class="text-2xl font-bold text-navy-900" id="totalMingguan">Rp 0</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 card-hover">
+          <p class="text-sm text-gray-500 mb-1">Rata-rata Harian</p>
+          <p class="text-2xl font-bold text-primary-600" id="rataHarian">Rp 0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Modal Page -->
+    <div id="page-target" class="page p-4 lg:p-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 card-hover">
+        <h3 class="text-lg font-semibold text-navy-900 mb-2">Target Modal Warung</h3>
+        <p class="text-sm text-gray-500 mb-6">Pantau pertumbuhan modal warung kamu</p>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <p class="text-xs text-gray-500">Modal Awal</p>
+            <p class="text-lg font-bold text-navy-900" id="modalAwal">Rp 10.000.000</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Target</p>
+            <p class="text-lg font-bold text-primary-600" id="modalTarget">Rp 20.000.000</p>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-4">
+          <div class="flex justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Progress</span>
+            <span class="text-sm font-bold text-primary-600" id="progressPersen">50%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+            <div id="progressBar" class="progress-bar bg-gradient-to-r from-primary-400 to-primary-600 h-4 rounded-full" style="width: 50%"></div>
+          </div>
+        </div>
+
+        <div class="bg-primary-50 rounded-xl p-4 mb-6">
+          <p class="text-sm text-gray-600">Modal Berjalan Saat Ini</p>
+          <p class="text-2xl font-bold text-navy-900" id="modalBerjalan">Rp 10.000.000</p>
+          <p class="text-xs text-gray-500 mt-1">Sisa <span id="sisaTarget">Rp 10.000.000</span> menuju target</p>
+        </div>
+
+        <div class="flex gap-3">
+          <div class="flex-1 relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">Rp</span>
+            <input type="number" id="inputModal" placeholder="Tambah modal" 
+              class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none">
+          </div>
+          <button onclick="tambahModal()" class="bg-green-500 text-white px-5 py-3 rounded-xl font-medium hover:bg-green-600 transition-colors">
+            + Tambah
+          </button>
+        </div>
+      </div>
+
+      <!-- History Modal -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 card-hover">
+        <h4 class="font-semibold text-navy-900 mb-4">Riwayat Penambahan Modal</h4>
+        <div id="modalHistory" class="space-y-2">
+          <p class="text-gray-400 text-sm">Belum ada riwayat</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation Mobile -->
+  <nav class="mobile-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 justify-around items-center px-2 py-2 z-50">
+    <button onclick="showPage('dashboard')" class="mobile-nav-btn flex flex-col items-center gap-1 px-3 py-2 rounded-lg" data-page="dashboard">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="text-xs">Home</span>
+    </button>
+    <button onclick="showPage('stok')" class="mobile-nav-btn flex flex-col items-center gap-1 px-3 py-2 rounded-lg" data-page="stok">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <span class="text-xs">Stok</span>
+    </button>
+    <button onclick="showPage('grafik')" class="mobile-nav-btn flex flex-col items-center gap-1 px-3 py-2 rounded-lg" data-page="grafik">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="text-xs">Grafik</span>
+    </button>
+    <button onclick="showPage('target')" class="mobile-nav-btn flex flex-col items-center gap-1 px-3 py-2 rounded-lg" data-page="target">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      <span class="text-xs">Target</span>
+    </button>
+  </nav>
+
+  <!-- Modal Tambah Barang -->
+  <div id="modalTambahBarang" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-navy-900">Tambah Barang</h3>
+        <button onclick="closeTambahBarang()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Nama Barang</label>
+          <input type="text" id="addNama" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none" placeholder="Contoh: Pandemas">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Kategori</label>
+          <select id="addKategori" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none">
+            <option value="rokok">Rokok</option>
+            <option value="kopi">Kopi</option>
+            <option value="snack">Snack</option>
+            <option value="sembako">Sembako</option>
+            <option value="gas">Gas LPG</option>
+            <option value="pulsa">Pulsa/PPOB</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Satuan</label>
+          <input type="text" id="addSatuan" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none" placeholder="Contoh: slop, renceng, pcs">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Stok Saat Ini</label>
+          <input type="number" id="addStok" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none" placeholder="0">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Stok Normal (Ideal)</label>
+          <input type="number" id="addStokNormal" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none" placeholder="10">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Batas Minimum (Alarm)</label>
+          <input type="number" id="addMinimum" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none" placeholder="3">
+        </div>
+        <button onclick="simpanBarang()" class="w-full bg-primary-500 text-white py-3 rounded-xl font-medium hover:bg-primary-600 transition-colors">
+          Simpan Barang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Stok -->
+  <div id="modalEditStok" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-navy-900">Update Stok</h3>
+        <button onclick="closeEditStok()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="text-sm text-gray-500 mb-3" id="editBarangNama"></p>
+      <input type="number" id="editStokInput" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-400 outline-none mb-4" placeholder="Stok baru">
+      <div class="flex gap-3">
+        <button onclick="updateStok()" class="flex-1 bg-primary-500 text-white py-3 rounded-xl font-medium hover:bg-primary-600 transition-colors">Update</button>
+        <button onclick="hapusBarang()" class="bg-red-50 text-red-600 px-4 py-3 rounded-xl font-medium hover:bg-red-100 transition-colors">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
