@@ -33,6 +33,7 @@ export function fromSatuanDasar(qtyDasar: number, kategori: string): { slop: num
 // === INTERFACES ===
 export interface Barang {
   id: number;
+  remoteId?: string;
   nama: string;
   kategori: string;
   satuan: string;
