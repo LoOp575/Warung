@@ -60,7 +60,7 @@ export function getData<T>(key: string, defaultVal: T): T {
   try {
     const data = localStorage.getItem("warungos_" + key);
     return data ? JSON.parse(data) : defaultVal;
-  } catch {
+  } catch (e) {
     return defaultVal;
   }
 }
