@@ -18,6 +18,8 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
   const [editStokVal, setEditStokVal] = useState("");
   const [editHargaModal, setEditHargaModal] = useState("");
   const [editHargaJual, setEditHargaJual] = useState("");
+  const [editStokNormal, setEditStokNormal] = useState("");
+  const [editMinimum, setEditMinimum] = useState("");
   const [addNama, setAddNama] = useState("");
   const [addKategori, setAddKategori] = useState("rokok");
   const [addSatuan, setAddSatuan] = useState("");
@@ -47,6 +49,8 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
     const updated = {
       ...editBarang,
       stok: parseInt(editStokVal) || editBarang.stok,
+      stokNormal: parseInt(editStokNormal) || editBarang.stokNormal,
+      minimum: parseInt(editMinimum) || editBarang.minimum,
       hargaModal: parseInt(editHargaModal) || editBarang.hargaModal,
       hargaJual: parseInt(editHargaJual) || editBarang.hargaJual,
     };
@@ -79,10 +83,10 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
           const rek = getRekomendasi(b, s);
           const persen = Math.min(100, Math.round(s.persen));
           const margin = hitungMarginPersen(b);
-          const barColor = s.color === "red" ? "bg-red-500" : s.color === "orange" ? "bg-orange-400" : "bg-green-500";
-          const statusClass = s.status === "BELI" ? "bg-red-100 text-red-700" : s.status === "WASPADA" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
+          const barColor = s.color === "red" ? "bg-red-500" : "bg-green-500";
+          const statusClass = s.status === "BELI" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700";
           return (
-            <div key={b.id} onClick={() => { setEditBarang(b); setEditStokVal(String(b.stok)); setEditHargaModal(String(b.hargaModal)); setEditHargaJual(String(b.hargaJual)); }} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover cursor-pointer">
+            <div key={b.id} onClick={() => { setEditBarang(b); setEditStokVal(String(b.stok)); setEditStokNormal(String(b.stokNormal)); setEditMinimum(String(b.minimum)); setEditHargaModal(String(b.hargaModal)); setEditHargaJual(String(b.hargaJual)); }} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover cursor-pointer">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h4 className="font-semibold text-navy-900">{b.nama}</h4>
@@ -92,11 +96,15 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
               </div>
               <div className="mb-2">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Stok: {b.stok} {b.satuan}</span>
+                  <span className="text-gray-500">Stok: {b.stok}/{b.stokNormal} {b.satuan}</span>
                   <span className="font-medium">{persen}%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                   <div className={`${barColor} h-2 rounded-full progress-bar`} style={{ width: `${persen}%` }}></div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>Batas restock: {b.minimum}</span>
+                  <span>Target: {b.stokNormal}</span>
                 </div>
               </div>
               {/* Harga */}
@@ -152,10 +160,18 @@ export default function StokPage({ stokBarang, onUpdateStok, onHapusBarang, onTa
             </div>
             <p className="text-sm font-medium text-gray-700 mb-3">{editBarang.nama}</p>
             <div className="space-y-3 mb-4">
-              <div><label className="text-xs text-gray-600 block mb-1">Stok ({editBarang.satuan})</label><input type="number" value={editStokVal} onChange={(e) => setEditStokVal(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400" /></div>
+              <div><label className="text-xs text-gray-600 block mb-1">Stok Sekarang ({editBarang.satuan})</label><input type="number" value={editStokVal} onChange={(e) => setEditStokVal(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-gray-600 block mb-1">Target Stok Max</label><input type="number" value={editStokNormal} onChange={(e) => setEditStokNormal(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" /></div>
+                <div><label className="text-xs text-gray-600 block mb-1">Batas Restock</label><input type="number" value={editMinimum} onChange={(e) => setEditMinimum(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" /></div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs text-gray-600 block mb-1">Harga Modal</label><input type="number" value={editHargaModal} onChange={(e) => setEditHargaModal(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" /></div>
                 <div><label className="text-xs text-gray-600 block mb-1">Harga Jual</label><input type="number" value={editHargaJual} onChange={(e) => setEditHargaJual(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-400 text-sm" /></div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+                <p>Jika stok &le; batas restock → status <span className="text-red-600 font-bold">BELI</span></p>
+                <p>Rekomendasi beli = Target stok - Stok sekarang</p>
               </div>
             </div>
             <div className="flex gap-3">

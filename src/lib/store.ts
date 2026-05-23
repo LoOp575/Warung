@@ -122,34 +122,37 @@ export function setData<T>(key: string, val: T): void {
   localStorage.setItem("warungos_" + key, JSON.stringify(val));
 }
 
-// === STATUS ===
+// === STATUS (Stok Fleksibel) ===
+// Logika baru:
+// - BELI jika stok <= batas restock (minimum)
+// - AMAN jika stok > batas restock
+// Rekomendasi beli = target stok (stokNormal) - stok sekarang
+
 export interface StatusInfo {
-  status: "AMAN" | "WASPADA" | "BELI";
-  color: "green" | "orange" | "red";
+  status: "AMAN" | "BELI";
+  color: "green" | "red";
   persen: number;
+  qtyRekomendasi: number;
 }
 
 export function getStatus(barang: Barang): StatusInfo {
-  const persen = (barang.stok / barang.stokNormal) * 100;
+  const persen = barang.stokNormal > 0 ? (barang.stok / barang.stokNormal) * 100 : 0;
+  const qtyRekomendasi = Math.max(0, barang.stokNormal - barang.stok);
+
   if (barang.stok <= barang.minimum) {
-    return { status: "BELI", color: "red", persen };
-  } else if (persen <= 50) {
-    return { status: "WASPADA", color: "orange", persen };
+    return { status: "BELI", color: "red", persen, qtyRekomendasi };
   } else {
-    return { status: "AMAN", color: "green", persen };
+    return { status: "AMAN", color: "green", persen, qtyRekomendasi };
   }
 }
 
 export function getRekomendasi(barang: Barang, statusInfo: StatusInfo): string {
   if (statusInfo.status === "BELI") {
-    if (barang.kategori === "gas") return `ISI! Stok tinggal ${barang.stok} tabung`;
+    if (barang.kategori === "gas") return `ISI! Stok ${barang.stok} tabung. Beli ${statusInfo.qtyRekomendasi} tabung`;
     if (barang.kategori === "pulsa") return `ISI DEPOSIT! Saldo tinggal ${barang.stok}%`;
-    return `BELI! Stok tinggal ${barang.stok} ${barang.satuan}`;
+    return `BELI ${statusInfo.qtyRekomendasi} ${barang.satuan}! Stok tinggal ${barang.stok}/${barang.stokNormal}`;
   }
-  if (statusInfo.status === "WASPADA") {
-    return `Perhatikan. Stok ${barang.stok}/${barang.stokNormal} ${barang.satuan}`;
-  }
-  return `Stok cukup (${barang.stok}/${barang.stokNormal} ${barang.satuan})`;
+  return `Stok aman (${barang.stok}/${barang.stokNormal} ${barang.satuan})`;
 }
 
 // === PROFIT ===
@@ -171,23 +174,19 @@ export function hitungMarginPersen(barang: Barang): number {
   return Math.round(((barang.hargaJual - barang.hargaModal) / barang.hargaModal) * 100);
 }
 
-// === REKOMENDASI BELANJA ===
+// === REKOMENDASI BELANJA (Stok Fleksibel) ===
 export function getRekomendasiBelanja(stokBarang: Barang[]): RekomendasiBelanja[] {
   const rekom: RekomendasiBelanja[] = [];
   stokBarang.forEach((b) => {
-    if (b.kategori === "pulsa") return; // skip pulsa
+    if (b.kategori === "pulsa") return;
     const status = getStatus(b);
-    if (status.status === "BELI" || status.status === "WASPADA") {
-      const qtyBeli = b.stokNormal - b.stok;
+    if (status.status === "BELI") {
+      const qtyBeli = status.qtyRekomendasi;
       const estimasiBiaya = qtyBeli * b.hargaModal;
       rekom.push({ barang: b, qtyBeli, estimasiBiaya });
     }
   });
-  return rekom.sort((a, b) => {
-    const priorityA = getStatus(a.barang).status === "BELI" ? 0 : 1;
-    const priorityB = getStatus(b.barang).status === "BELI" ? 0 : 1;
-    return priorityA - priorityB;
-  });
+  return rekom;
 }
 
 export const KATEGORI_LABEL: Record<string, string> = {
