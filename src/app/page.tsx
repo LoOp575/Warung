@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import DashboardPage from "@/components/DashboardPage";
@@ -22,7 +22,7 @@ import {
   dbFetchProducts, dbInsertProduct, dbUpdateProduct, dbDeleteProduct,
   dbCreateSale, dbFetchSalesToday, dbFetchSaleItemsToday,
   dbCreateRestock, dbFetchRestocksToday,
-  dbUpsertDailyReport, dbFetchDailyReports, dbFetchTodayReport,
+  dbUpsertDailyReport, dbFetchDailyReports,
   dbInsertPulsaTransaction, dbFetchPulsaTransactions, dbFetchPulsaBalance,
   SaleItemRow,
 } from "@/lib/supabase";
@@ -44,14 +44,11 @@ export default function Home() {
 
   // Load all data on mount
   useEffect(() => {
-    loadAll();
-  }, []);
-
-  const loadAll = useCallback(async () => {
-    // Products
-    let products: Barang[] | null = null;
-    if (isSupabaseEnabled()) {
-      const rows = await dbFetchProducts();
+    async function loadData() {
+      // Products
+      let products: Barang[] | null = null;
+      if (isSupabaseEnabled()) {
+        const rows = await dbFetchProducts();
       if (rows) {
         products = rows.map(rowToBarang);
         setDbStatus("connected");
@@ -99,7 +96,13 @@ export default function Home() {
     }
 
     setMounted(true);
+  }
+  loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reload function for BackupPage
+  const loadAll = async () => { window.location.reload(); };
 
   // === PRODUCT HANDLERS ===
   const handleTambahBarang = async (barang: Omit<Barang, "id">) => {

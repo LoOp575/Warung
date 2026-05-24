@@ -16,14 +16,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const update = parseUpdate(body);
 
-    if (!update || !update.message || !update.message.text) {
+    if (!update || !update.message) {
       return NextResponse.json({ ok: true });
     }
 
-    const { message } = update;
+    const message = update.message;
+    if (!message.from || !message.chat) {
+      return NextResponse.json({ ok: true });
+    }
+
     const userId = message.from.id;
     const chatId = message.chat.id;
-    const text = message.text.trim();
+    const text = (message.text || "").trim();
+
+    if (!text) {
+      return NextResponse.json({ ok: true });
+    }
 
     // Check if user is allowed
     if (!isAllowedUser(userId)) {
