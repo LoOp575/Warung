@@ -224,7 +224,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary-500 mb-2">WarungOS</h1>
+          <h1 className="text-2xl font-bold text-primary-500 mb-2">WarungNeng</h1>
           <p className="text-gray-400">Memuat...</p>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function Home() {
         <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-100 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-navy-900 lg:hidden">WarungOS</h2>
+              <h2 className="text-xl font-bold text-navy-900 lg:hidden">WarungNeng</h2>
               <p className="text-sm text-gray-500">{getTanggalIndo()}</p>
               <p className={`text-xs mt-1 ${syncStatus === "supabase" ? "text-green-600" : syncStatus === "error" ? "text-red-500" : "text-orange-500"}`}>
                 {syncStatus === "supabase" ? "Stok tersambung Supabase" : syncStatus === "error" ? "Supabase error, data lokal aktif" : "Mode lokal"}
